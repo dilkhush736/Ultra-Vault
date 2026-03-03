@@ -12,9 +12,9 @@ const credentialRoutes = require("./routes/credentialRoutes");
 const app = express();
 
 /* =======================================================
-   🔐 TRUST PROXY (IMPORTANT FOR RENDER / EXPRESS-RATE-LIMIT)
+   🔐 TRUST PROXY (RENDER SAFE)
 ======================================================= */
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 /* =======================================================
    🔐 SECURITY MIDDLEWARES
@@ -23,7 +23,7 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "*",
+    origin: "*", // can restrict later
     credentials: true,
   })
 );
@@ -32,15 +32,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* =======================================================
-   🔒 RATE LIMITER (LOGIN PROTECTION)
+   🔒 SAFE RATE LIMITER (NO CRASH VERSION)
 ======================================================= */
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
+  windowMs: 15 * 60 * 1000,
   max: 10,
-  message: {
-    success: false,
-    message: "Too many login attempts. Please try again later.",
-  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip,
 });
 
 app.use("/auth/login", loginLimiter);
@@ -63,12 +62,9 @@ app.get("/", (req, res) => {
 ======================================================= */
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB Connected");
-  })
+  .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {
-    console.error("❌ MongoDB Connection Error:", err.message);
-    process.exit(1); // Stop server if DB fails
+    console.error("❌ MongoDB Error:", err.message);
   });
 
 /* =======================================================
