@@ -15,7 +15,7 @@ const app = express(); // ✅ App define FIRST
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
 // 🔒 Rate Limiter for Login
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
