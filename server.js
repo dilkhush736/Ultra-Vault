@@ -6,50 +6,64 @@ const cors = require("cors");
 const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
 
+console.log("✅ server.js loaded");
+console.log("✅ USING authRoutes FILE =>", require.resolve("./routes/authRoutes"));
+console.log(
+  "✅ USING credentialRoutes FILE =>",
+  require.resolve("./routes/credentialRoutes")
+);
+
 const authRoutes = require("./routes/authRoutes");
 const credentialRoutes = require("./routes/credentialRoutes");
+
+console.log("✅ authRoutes imported type:", typeof authRoutes);
 
 const app = express();
 
 /* =======================================================
-   🔐 TRUST PROXY (RENDER SAFE)
+   🔐 TRUST PROXY
 ======================================================= */
-app.set("trust proxy", 1); // ✅ IMPORTANT for Render
+app.set("trust proxy", 1);
 
 /* =======================================================
-   🔐 SECURITY MIDDLEWARES
+   🔐 SECURITY
 ======================================================= */
 app.use(helmet());
 
-app.use(
-  cors({
-    origin: "*", 
-    credentials: true,
-  })
-);
+/* =======================================================
+   🌍 CORS (SAFE)
+======================================================= */
+const corsOptions = {
+  origin: "http://localhost:3000",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
+
+/* =======================================================
+   BODY PARSER
+======================================================= */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* =======================================================
-   🔒 SAFE RATE LIMITER (FIXED VERSION)
+   🔒 RATE LIMITER
 ======================================================= */
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  // ❌ keyGenerator remove kar diya
 });
 
 app.use("/auth/login", loginLimiter);
 
 /* =======================================================
-   🚀 ROUTES
+   ✅ HEALTH CHECK ROUTES (SERVER LEVEL)
 ======================================================= */
-app.use("/auth", authRoutes);
-app.use("/api/credentials", credentialRoutes);
-
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
@@ -57,23 +71,62 @@ app.get("/", (req, res) => {
   });
 });
 
-/* =======================================================
-   🌍 DATABASE CONNECTION
-======================================================= */
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => {
-    console.error("❌ MongoDB Error:", err.message);
+app.get("/ping", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "pong-from-server.js (/ping)",
+    time: new Date(),
   });
+});
 
 /* =======================================================
-   🚀 START SERVER
+   🚀 ROUTES
+======================================================= */
+console.log("✅ mounting /auth routes...");
+app.use("/auth", authRoutes);
+
+console.log("✅ mounting /api/credentials routes...");
+app.use("/api/credentials", credentialRoutes);
+
+/* =======================================================
+   ❌ 404 HANDLER
+======================================================= */
+app.use((req, res) => {
+  console.log("❌ Route not found:", req.method, req.originalUrl);
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.originalUrl,
+  });
+});
+
+/* =======================================================
+   🌍 DATABASE CONNECTION + START
 ======================================================= */
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log("=====================================");
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log("=====================================");
-});
+if (!process.env.MONGO_URI) {
+  console.log("❌ MONGO_URI missing in .env");
+}
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+
+    app.listen(PORT, () => {
+      console.log("=====================================");
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log("=====================================");
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB Error:", err.message);
+
+    // Server ko phir bhi chala do (debug ke liye)
+    app.listen(PORT, () => {
+      console.log("=====================================");
+      console.log(`🚀 Server running on port ${PORT} (DB NOT CONNECTED)`);
+      console.log("=====================================");
+    });
+  });

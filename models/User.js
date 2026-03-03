@@ -21,9 +21,22 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    // ✅ Forgot/Reset Password Fields
-    resetPasswordToken: String,
-    resetPasswordExpire: Date,
+    // 🔐 Master Password (V2)
+    masterPasswordHash: {
+      type: String,
+      default: null, // ✅ important
+    },
+
+    // 🔁 Forgot/Reset Password
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+
+    resetPasswordExpire: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
