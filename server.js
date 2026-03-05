@@ -126,6 +126,14 @@ app.get("/ping", (req, res) => {
   });
 });
 
+
+app.get("/__build", (req, res) => {
+  res.json({
+    success: true,
+    build: "ultravault-admin-v1",
+    time: new Date().toISOString(),
+  });
+});
 /* =======================================================
    🚀 ROUTES
 ======================================================= */
