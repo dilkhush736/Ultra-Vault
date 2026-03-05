@@ -19,6 +19,10 @@ const credentialRoutes = require("./routes/credentialRoutes");
 console.log("✅ authRoutes imported type:", typeof authRoutes);
 
 const app = express();
+app.use(cors())
+
+const adminRoutes = require("./routes/adminRoutes");
+app.use("/api/admin", adminRoutes);
 
 /* =======================================================
    🔐 TRUST PROXY
