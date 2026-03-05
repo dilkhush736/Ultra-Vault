@@ -19,13 +19,7 @@ const credentialRoutes = require("./routes/credentialRoutes");
 console.log("✅ authRoutes imported type:", typeof authRoutes);
 
 const app = express();
-app.use(cors())
 
-const adminRoutes = require("./routes/adminRoutes");
-app.use("/api/admin", adminRoutes);
-
-const paymentRoutes = require("./routes/paymentRoutes");
-app.use("/api/pay", paymentRoutes);
 
 console.log("✅ mounting /api/admin routes...");
 console.log("✅ mounting /api/pay routes...");
@@ -90,6 +84,12 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+const adminRoutes = require("./routes/adminRoutes");
+app.use("/api/admin", adminRoutes);
+
+const paymentRoutes = require("./routes/paymentRoutes");
+app.use("/api/pay", paymentRoutes);
 /* =======================================================
    🔒 RATE LIMITER
 ======================================================= */

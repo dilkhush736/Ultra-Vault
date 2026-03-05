@@ -43,27 +43,46 @@ router.post("/create-order", requireAuth, async (req, res) => {
 // ✅ Verify Payment Signature (mandatory) :contentReference[oaicite:3]{index=3}
 router.post("/verify", requireAuth, async (req, res) => {
   try {
+
+    console.log("VERIFY BODY:", req.body);
+
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
+
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ success: false, message: "Missing fields" });
+      return res.status(400).json({
+        success: false,
+        message: "Missing fields",
+        got: req.body
+      });
     }
 
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+
     const expected = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body)
       .digest("hex");
 
     if (expected !== razorpay_signature) {
-      return res.status(400).json({ success: false, message: "Invalid signature" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid signature"
+      });
     }
 
-    // ✅ Mark user as paid/unlocked
     await User.findByIdAndUpdate(req.userId, { adminPaid: true });
 
-    return res.json({ success: true, message: "Admin access unlocked" });
+    return res.json({
+      success: true,
+      message: "Admin access unlocked"
+    });
+
   } catch (e) {
-    return res.status(500).json({ success: false, message: e.message });
+    console.log("VERIFY ERROR:", e);
+    return res.status(500).json({
+      success: false,
+      message: e.message
+    });
   }
 });
 
