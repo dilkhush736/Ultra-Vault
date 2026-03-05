@@ -86,10 +86,16 @@ app.use(express.urlencoded({ extended: true }));
 
 
 const adminRoutes = require("./routes/adminRoutes");
+console.log("✅ adminRoutes file =>", require.resolve("./routes/adminRoutes"));
+console.log("✅ adminRoutes type =>", typeof adminRoutes);
+
 app.use("/api/admin", adminRoutes);
+console.log("✅ mounted /api/admin ✅");
 
 const paymentRoutes = require("./routes/paymentRoutes");
+console.log("✅ paymentRoutes file =>", require.resolve("./routes/paymentRoutes"));
 app.use("/api/pay", paymentRoutes);
+console.log("✅ mounted /api/pay ✅");
 /* =======================================================
    🔒 RATE LIMITER
 ======================================================= */

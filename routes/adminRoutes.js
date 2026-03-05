@@ -1,3 +1,4 @@
+console.log("✅ adminRoutes.js loaded");
 const express = require("express");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
@@ -6,7 +7,9 @@ const Credential = require("../models/credential"); // filename case check
 
 router.use(requireAuth);
 // ✅ later: router.use(requireAdmin)
-
+router.get("/ping", (req, res) => {
+  res.json({ success: true, message: "admin routes alive" });
+});
 // ================= USERS =================
 router.get("/users", async (req, res) => {
   try {
