@@ -16,7 +16,7 @@ const razorpay = new Razorpay({
 // ✅ Create Order (server-side) :contentReference[oaicite:2]{index=2}
 router.post("/create-order", requireAuth, async (req, res) => {
   try {
-    const amountInRupees = 1000; // ₹100 for testing, change as needed
+    const amountInRupees = 1; // ₹100 for testing, change as needed
 
     // ✅ Unique receipt/order id (for tracking)
 
