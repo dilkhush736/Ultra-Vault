@@ -59,7 +59,6 @@ console.log("✅ CORS allowed origins:", allowedOrigins);
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // allow requests with no origin (Postman, curl, server-to-server)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
@@ -75,8 +74,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// preflight
-// app.options("/*", cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 /* =======================================================
    BODY PARSER
@@ -144,6 +142,23 @@ app.use("/api/subscribers", subscriberRoutes);
 console.log("✅ mounting /api/credentials routes...");
 app.use("/api/credentials", credentialRoutes);
 
+
+app.use((err, req, res, next) => {
+  if (err && err.message && err.message.includes("CORS")) {
+    return res.status(403).json({
+      success: false,
+      message: "CORS blocked this request",
+      origin: req.headers.origin || null,
+    });
+  }
+
+  console.error("❌ Server error:", err.message);
+  return res.status(500).json({
+    success: false,
+    message: err.message || "Internal server error",
+  });
+});
+
 /* =======================================================
    ❌ 404 HANDLER
 ======================================================= */
@@ -190,13 +205,3 @@ mongoose
 /* =======================================================
    ✅ OPTIONAL: Better error msg for CORS failures
 ======================================================= */
-app.use((err, req, res, next) => {
-  if (err && err.message && err.message.includes("CORS")) {
-    return res.status(403).json({
-      success: false,
-      message: "CORS blocked this request",
-      origin: req.headers.origin || null,
-    });
-  }
-  next(err);
-});
