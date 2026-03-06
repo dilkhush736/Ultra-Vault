@@ -8,6 +8,8 @@ const PDFDocument = require("pdfkit");
 const Payment = require("../models/Payment");
 const User = require("../models/User");
 
+const path = require("path");
+const fs = require("fs");
 
 
 
@@ -141,47 +143,60 @@ doc.pipe(res);
 const pageWidth = doc.page.width;
 const pageHeight = doc.page.height;
 
+// logo path
+const logoPath = path.join(__dirname, "../assets/logo.png");
+const hasLogo = fs.existsSync(logoPath);
+
 // Background
 doc.rect(0, 0, pageWidth, pageHeight).fill("#f4f7fb");
 
-// Top header bar
+// Top header
 doc.rect(0, 0, pageWidth, 110).fill("#0f172a");
 
-// Brand icon box
-doc.roundedRect(45, 30, 42, 42, 10).fill("#2563eb");
-doc
-  .fillColor("#ffffff")
-  .fontSize(20)
-  .text("🔐", 55, 39, { width: 22, align: "center" });
+// Logo or fallback icon
+if (hasLogo) {
+  doc.image(logoPath, 45, 25, {
+    fit: [50, 50],
+    align: "center",
+    valign: "center",
+  });
+} else {
+  doc.roundedRect(45, 30, 42, 42, 10).fill("#2563eb");
+  doc
+    .fillColor("#ffffff")
+    .font("Helvetica-Bold")
+    .fontSize(18)
+    .text("UV", 53, 42, { width: 25, align: "center" });
+}
 
 // Brand title
 doc
   .fillColor("#ffffff")
   .font("Helvetica-Bold")
   .fontSize(24)
-  .text("Ultra Vault", 100, 34);
+  .text("Ultra Vault", 110, 34);
 
 doc
+  .fillColor("#cbd5e1")
   .font("Helvetica")
   .fontSize(11)
-  .fillColor("#cbd5e1")
-  .text("Secure Payment Receipt", 101, 64);
+  .text("Secure Payment Receipt", 111, 64);
 
-// Receipt tag
-doc.roundedRect(pageWidth - 165, 35, 120, 32, 16).fill("#1e293b");
+// Status pill
+doc.roundedRect(pageWidth - 170, 35, 125, 32, 16).fill("#1e293b");
 doc
   .fillColor("#93c5fd")
   .font("Helvetica-Bold")
   .fontSize(11)
-  .text("PAYMENT SUCCESS", pageWidth - 155, 45, {
-    width: 100,
+  .text("PAYMENT SUCCESS", pageWidth - 160, 45, {
+    width: 105,
     align: "center",
   });
 
-// Main white card
+// Main card
 doc.roundedRect(35, 130, pageWidth - 70, 610, 20).fill("#ffffff");
 
-// Title inside card
+// Card heading
 doc
   .fillColor("#0f172a")
   .font("Helvetica-Bold")
@@ -194,13 +209,16 @@ doc
   .fontSize(11)
   .text("This receipt confirms your successful Ultra Vault payment.", 55, 190);
 
-// Amount highlight card
+// Amount card
 doc.roundedRect(pageWidth - 225, 150, 150, 80, 16).fill("#eff6ff");
 doc
   .fillColor("#2563eb")
   .font("Helvetica")
   .fontSize(11)
-  .text("AMOUNT PAID", pageWidth - 195, 168, { width: 90, align: "center" });
+  .text("AMOUNT PAID", pageWidth - 195, 168, {
+    width: 90,
+    align: "center",
+  });
 
 doc
   .fillColor("#0f172a")
@@ -212,15 +230,20 @@ doc
   });
 
 // Divider
-doc.moveTo(55, 250).lineTo(pageWidth - 55, 250).strokeColor("#e2e8f0").lineWidth(1).stroke();
+doc
+  .moveTo(55, 250)
+  .lineTo(pageWidth - 55, 250)
+  .strokeColor("#e2e8f0")
+  .lineWidth(1)
+  .stroke();
 
-// Helper for label/value rows
+// Row helper
 const drawRow = (label, value, y) => {
   doc
     .fillColor("#64748b")
     .font("Helvetica-Bold")
     .fontSize(11)
-    .text(label, 60, y, { width: 150 });
+    .text(label, 60, y, { width: 140 });
 
   doc
     .fillColor("#111827")
@@ -229,7 +252,6 @@ const drawRow = (label, value, y) => {
     .text(String(value || "-"), 200, y, { width: 320 });
 };
 
-// Left detail block
 drawRow("Receipt No", payment.receiptNo, 275);
 drawRow("Payment ID", payment.razorpayPaymentId, 305);
 drawRow("Order ID", payment.razorpayOrderId, 335);
@@ -240,7 +262,7 @@ drawRow("Currency", payment.currency, 455);
 drawRow("Status", payment.status.toUpperCase(), 485);
 drawRow("Paid On", new Date(payment.createdAt).toLocaleString(), 515);
 
-// Small status badge
+// Success badge
 doc.roundedRect(pageWidth - 180, 470, 95, 30, 15).fill("#dcfce7");
 doc
   .fillColor("#166534")
@@ -257,7 +279,7 @@ doc
   .fillColor("#0f172a")
   .font("Helvetica-Bold")
   .fontSize(14)
-  .text("Thank you for your payment!", 75, 595);
+  .text("Thank you for your payment! Best Regards: Dilkhush", 75, 595);
 
 doc
   .fillColor("#475569")
@@ -280,12 +302,10 @@ doc
   .font("Helvetica")
   .fontSize(9)
   .text(
-    "Generated securely by Ultra Vault • This is a system-generated receipt.",
+    "Generated securely by Ultra Vault • This is a system-generated receipt automatically by Dilkhush Kumar.",
     0,
     pageHeight - 40,
-    {
-      align: "center",
-    }
+    { align: "center" }
   );
 
 doc.end();
